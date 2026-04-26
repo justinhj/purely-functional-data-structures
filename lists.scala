@@ -5,9 +5,9 @@ val demo = List(1,2,3)
 
 def suffixes_helper[A](in: List[A], out: List[List[A]]): List[List[A]] = in match 
   case (hd :: tl) =>
-    suffixes_helper(tl, out :+ in)
+    suffixes_helper(tl, in +: out)
   case Nil => 
-    out :+ in
+    (Nil +: out).reverse
 
 extension [A](xs: List[A])
   def suffixes: List[List[A]] = suffixes_helper(xs, Nil)
