@@ -1,4 +1,4 @@
-//> using test.dep org.scalameta::munit::1.0.0
+//> using test.dep org.scalameta::munit::1.3.0
 
 class BinaryTreeSetTest extends munit.FunSuite {
 
