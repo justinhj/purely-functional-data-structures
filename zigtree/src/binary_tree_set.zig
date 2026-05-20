@@ -70,5 +70,18 @@ pub fn BinaryTreeSet(comptime T: type) type {
                 return false;
             }
         }
+
+        pub fn member3(x: T, t: Tree) bool {
+            var node = t;
+            while (node) |curr| {
+                const compare = std.math.order(x, curr.value); 
+                switch (compare) {
+                    .lt => node = curr.left,
+                    .gt => node = curr.right,
+                    .eq => return true,
+                }
+            }
+            return false;
+        }
     };
 }

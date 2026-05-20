@@ -14,6 +14,12 @@ pub fn main() !void {
         tree = try IntTreeSet.insert(allocator, num, tree);
     }
 
+    std.debug.print("Searching for 4 (exists): {}\n", .{IntTreeSet.member(4, tree)});
+    std.debug.print("Searching for 7 (missing): {}\n", .{IntTreeSet.member(7, tree)});
+
     std.debug.print("Searching for 4 (exists): {}\n", .{IntTreeSet.member2(4, tree, null)});
     std.debug.print("Searching for 7 (missing): {}\n", .{IntTreeSet.member2(7, tree, null)});
+
+    std.debug.print("Searching for 4 (exists): {}\n", .{IntTreeSet.member3(4, tree)});
+    std.debug.print("Searching for 7 (missing): {}\n", .{IntTreeSet.member3(7, tree)});
 }
