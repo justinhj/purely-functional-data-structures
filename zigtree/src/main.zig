@@ -55,12 +55,16 @@ pub fn main(init: std.process.Init) !void {
 
     // --- Benchmark: Mutable (BinaryTreeStd) ---
     // Warm-up
+    var warm_up_hash: u32 = 0;
     for (search_keys[0..@min(100, search_keys.len)]) |key| {
-        std.mem.doNotOptimizeAway(IntTreeStd.member(key, tree_std));
+        const found = IntTreeStd.member(key, tree_std);
+        warm_up_hash = warm_up_hash *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
     }
     const start_std = std.Io.Clock.awake.now(io);
+    var hash: u32 = 0;
     for (search_keys) |key| {
-        std.mem.doNotOptimizeAway(IntTreeStd.member(key, tree_std));
+        const found = IntTreeStd.member(key, tree_std);
+        hash = hash *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
     }
     const elapsed_std = start_std.untilNow(io, .awake);
     const elapsed_ns_std = elapsed_std.toNanoseconds();
@@ -70,5 +74,6 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("Benchmark Results:\n", .{});
     std.debug.print("  Tree Size: {d}\n", .{num_elements});
     std.debug.print("  Iterations: {d}\n", .{num_iterations});
+    std.debug.print("  Hash (sanity check): 0x{x}\n", .{hash +% warm_up_hash});
     std.debug.print("  Mutable (BinaryTreeStd) Search:           {d} ns/op\n", .{avg_ns_std});
 }
