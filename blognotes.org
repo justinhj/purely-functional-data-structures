@@ -1,0 +1,46 @@
+* Notes on the binary search blog post
+The central topic is Arne Andersson's paper "A Note on Searching in a Binary Tree".
+
+A method to search a tree with 2-way comparisons is presented and is only 1 more comparison than 3-way.
+
+He notes that modern high-level languages don't support 3-way.
+
+TODO don't fully understand some nuance here. 
+
+Typical implementation, 3-way comparison... is it <, go left, is it > go right, otherwise you found it.
+Plus a check at each "go in direction" operation. 
+
+In generated code likely does 2 2-way comparisons (== and <) at each step instead of doing a single 3-way comparison.
+
+We talk about the sentinel method first. Putting the sentinel at the leaves. 
+
+Comparison... 
+Standard search (Up to 3 comparisons per loop)
+At each step check the tree is not null[1] and the tree does not contain the target[2] 
+Next check for < then and go left if true (compare <) [3]
+Else go right  (no comparison)
+
+Sentinel search (2 comparisons per loop and 1 at the end)
+while key not the target [1] 
+  if < [2] go left
+  else go right
+
+final check, is found element the target or not
+
+next we get to Arne's contribution:
+
+Two Way Search (2 comparisons per loop and 2 at the end)
+
+candidate = null
+While tree is not null [1] 
+  if < [2] go left
+  else go right (save candidate)
+
+At the bottom of the tree we do two comparisons:
+  if candidate not null and candidate == target 
+     we found it
+
+Note: deletion is cheaper because instead of finding the element first and then a leaf, we find both 
+
+The test
+
