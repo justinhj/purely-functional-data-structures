@@ -53,27 +53,62 @@ pub fn main(init: std.process.Init) !void {
         }
     }
 
-    // --- Benchmark: Mutable (BinaryTreeStd) ---
+    // --- Benchmark: Standard Search (member) ---
     // Warm-up
-    var warm_up_hash: u32 = 0;
+    var warm_up_hash_std: u32 = 0;
     for (search_keys[0..@min(100, search_keys.len)]) |key| {
         const found = IntTreeStd.member(key, tree_std);
-        warm_up_hash = warm_up_hash *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
+        warm_up_hash_std = warm_up_hash_std *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
     }
     const start_std = std.Io.Clock.awake.now(io);
-    var hash: u32 = 0;
+    var hash_std: u32 = 0;
     for (search_keys) |key| {
         const found = IntTreeStd.member(key, tree_std);
-        hash = hash *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
+        hash_std = hash_std *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
     }
     const elapsed_std = start_std.untilNow(io, .awake);
     const elapsed_ns_std = elapsed_std.toNanoseconds();
     const avg_ns_std = @divTrunc(elapsed_ns_std, @as(i96, num_iterations));
 
+    // --- Benchmark: Two-Way Search (member2) ---
+    // Warm-up
+    var warm_up_hash_two: u32 = 0;
+    for (search_keys[0..@min(100, search_keys.len)]) |key| {
+        const found = IntTreeStd.member2(key, tree_std, null);
+        warm_up_hash_two = warm_up_hash_two *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
+    }
+    const start_two = std.Io.Clock.awake.now(io);
+    var hash_two: u32 = 0;
+    for (search_keys) |key| {
+        const found = IntTreeStd.member2(key, tree_std, null);
+        hash_two = hash_two *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
+    }
+    const elapsed_two = start_two.untilNow(io, .awake);
+    const elapsed_ns_two = elapsed_two.toNanoseconds();
+    const avg_ns_two = @divTrunc(elapsed_ns_two, @as(i96, num_iterations));
+
+    // --- Benchmark: Three-Way Search (member3) ---
+    // Warm-up
+    var warm_up_hash_three: u32 = 0;
+    for (search_keys[0..@min(100, search_keys.len)]) |key| {
+        const found = IntTreeStd.member3(key, tree_std);
+        warm_up_hash_three = warm_up_hash_three *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
+    }
+    const start_three = std.Io.Clock.awake.now(io);
+    var hash_three: u32 = 0;
+    for (search_keys) |key| {
+        const found = IntTreeStd.member3(key, tree_std);
+        hash_three = hash_three *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
+    }
+    const elapsed_three = start_three.untilNow(io, .awake);
+    const elapsed_ns_three = elapsed_three.toNanoseconds();
+    const avg_ns_three = @divTrunc(elapsed_ns_three, @as(i96, num_iterations));
+
     // 7. Output results
     std.debug.print("Benchmark Results:\n", .{});
     std.debug.print("  Tree Size: {d}\n", .{num_elements});
-    std.debug.print("  Iterations: {d}\n", .{num_iterations});
-    std.debug.print("  Hash (sanity check): 0x{x}\n", .{hash +% warm_up_hash});
-    std.debug.print("  Mutable (BinaryTreeStd) Search:           {d} ns/op\n", .{avg_ns_std});
+    std.debug.print("  Iterations: {d}\n\n", .{num_iterations});
+    std.debug.print("  Standard Search: {d: >4} ns/op (Hash: 0x{x})\n", .{avg_ns_std, hash_std +% warm_up_hash_std});
+    std.debug.print("  Two-Way Search:  {d: >4} ns/op (Hash: 0x{x})\n", .{avg_ns_two, hash_two +% warm_up_hash_two});
+    std.debug.print("  Three-Way Search: {d: >4} ns/op (Hash: 0x{x})\n", .{avg_ns_three, hash_three +% warm_up_hash_three});
 }
