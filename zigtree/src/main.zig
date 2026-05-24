@@ -9,8 +9,6 @@ pub fn main(init: std.process.Init) !void {
     var num_iterations: usize = 10_000;
     var num_elements: usize = 100_000;
 
-    const args = try init.minimal.args.toSlice(allocator);
-
     // 1. Check environment variables
     if (init.environ_map.get("NUM_ITERATIONS") orelse init.environ_map.get("num_iterations")) |val| {
         num_iterations = std.fmt.parseInt(usize, val, 10) catch |err| {
@@ -25,24 +23,10 @@ pub fn main(init: std.process.Init) !void {
         };
     }
 
-    // 2. Check command-line arguments (overrides environment variables)
-    if (args.len > 1) {
-        if (args.len != 3) {
-            std.debug.print("Error: Expected exactly 2 arguments (num_iterations, num_elements) but got {d}\n", .{args.len - 1});
-            std.process.exit(1);
-        }
-        num_iterations = std.fmt.parseInt(usize, args[1], 10) catch |err| {
-            std.debug.print("Error: Failed to parse num_iterations argument '{s}': {}\n", .{args[1], err});
-            std.process.exit(1);
-        };
-        num_elements = std.fmt.parseInt(usize, args[2], 10) catch |err| {
-            std.debug.print("Error: Failed to parse num_elements argument '{s}': {}\n", .{args[2], err});
-            std.process.exit(1);
-        };
+    if (num_iterations == 0 or num_elements == 0) {
+        std.debug.print("Zero iterations or zero elements requested. Skipping benchmark\n", .{});
+        std.process.exit(1);
     }
-
-    if (num_iterations == 0) num_iterations = 1;
-    if (num_elements == 0) num_elements = 1;
 
     // 3. Generate random elements from hardcoded seed
     var prng = std.Random.DefaultPrng.init(0x1287ab29);
