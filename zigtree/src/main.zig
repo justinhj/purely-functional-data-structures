@@ -8,7 +8,8 @@ pub fn main(init: std.process.Init) !void {
     var num_iterations: usize = 10_000;
     var num_elements: usize = 100_000;
 
-    // Gather the parameters from the environment
+    // NUM_ITERATIONS and NUM_ELEMENTS are external parameters which helps avoid the compiler
+    // optimizing away our benchmarks.
     if (init.environ_map.get("NUM_ITERATIONS") orelse init.environ_map.get("num_iterations")) |val| {
         num_iterations = std.fmt.parseInt(usize, val, 10) catch |err| {
             std.debug.print("Error: Failed to parse NUM_ITERATIONS environment variable '{s}': {}\n", .{val, err});
@@ -27,7 +28,7 @@ pub fn main(init: std.process.Init) !void {
         std.process.exit(1);
     }
 
-    // Hardcode a random seed for consistent results
+    // Hardcode a random seed for consistent results across benchmarks
     var prng = std.Random.DefaultPrng.init(0x1287ab29);
     const random = prng.random();
 
@@ -104,7 +105,7 @@ pub fn main(init: std.process.Init) !void {
     const elapsed_ns_three = elapsed_three.toNanoseconds();
     const avg_ns_three = @divTrunc(elapsed_ns_three, @as(i96, num_iterations));
 
-    // 7. Output results
+    // Output results
     std.debug.print("Benchmark Results:\n", .{});
     std.debug.print("  Tree Size: {d}\n", .{num_elements});
     std.debug.print("  Iterations: {d}\n\n", .{num_iterations});
