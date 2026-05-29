@@ -32,25 +32,25 @@ pub fn main(init: std.process.Init) !void {
     var prng = std.Random.DefaultPrng.init(0x1287ab29);
     const random = prng.random();
 
-    const keys = try allocator.alloc(i32, num_elements);
+    const keys = try allocator.alloc(f32, num_elements);
     for (keys) |*key| {
-        key.* = random.int(i32);
+        key.* = random.float(f32);
     }
 
     // Build the tree to benchmark search on
-    const IntTreeStd = bts_std.BinaryTreeStd(i32);
+    const IntTreeStd = bts_std.BinaryTreeStd(f32);
     var tree_std: IntTreeStd.Tree = null;
     for (keys) |key| {
         tree_std = try IntTreeStd.insert(allocator, key, tree_std);
     }
 
     // Generate search queries (50% present, 50% random)
-    const search_keys = try allocator.alloc(i32, num_iterations);
+    const search_keys = try allocator.alloc(f32, num_iterations);
     for (search_keys) |*key| {
         if (random.boolean()) {
             key.* = keys[random.intRangeLessThan(usize, 0, num_elements)];
         } else {
-            key.* = random.int(i32);
+            key.* = random.float(f32);
         }
     }
 
