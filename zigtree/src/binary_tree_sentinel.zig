@@ -28,17 +28,21 @@ pub fn BinaryTreeSentinel(comptime T: type) type {
             this.sentinel.value = value;
         }
 
+        fn createNode(this: *This, allocator: std.mem.Allocator, value: T) !*Node {
+            const new_node = try allocator.create(Node);
+            new_node.* =  .{ .value = value, .left = this.sentinel, .right = this.sentinel };
+            return new_node;
+        }
+
         pub fn insert(this: *This, allocator: std.mem.Allocator, value: T) !void {
             var curr = this.root orelse {
-                // Empty tree case
-                const new_node = try allocator.create(Node);
-                new_node.* = .{ .value = value, .left = this.sentinel, .right = this.sentinel };
+                const new_node = try this.createNode(allocator, value);
                 this.root = new_node;
                 return;
             };
 
             var parent: *Node = undefined;
-            this.sentinel.value = value; // sentinel search optimization
+            this.sentinel.value = value; // set the sentinel for the current search
             
             while (value != curr.value) {
                 parent = curr;
@@ -92,10 +96,23 @@ test "BinaryTreeSentinel basic test" {
 
     try tree.insert(allocator, 5.0);
     try tree.insert(allocator, 3.0);
+    try tree.insert(allocator, 7.0);
     try tree.insert(allocator, 8.0);
 
     try std.testing.expect(tree.member(5.0) == true);
     try std.testing.expect(tree.member(3.0) == true);
     try std.testing.expect(tree.member(8.0) == true);
     try std.testing.expect(tree.member(4.0) == false);
+    try std.testing.expect(tree.member(7.0) == true);
+    try std.testing.expect(tree.member(9.0) == false);
+}
+
+test "BinaryTreeSentinel empty tree test" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const FloatTree = BinaryTreeSentinel(f32);
+    var tree = try FloatTree.init(allocator);
+    try std.testing.expect(tree.member(9.0) == false);
 }
