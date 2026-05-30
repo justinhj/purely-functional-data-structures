@@ -80,22 +80,12 @@ pub fn main(init: std.process.Init) !void {
         }
     }{ .tree = tree_std });
 
-    // Calculate throughput averages
-    const iterations_u64 = @as(u64, @intCast(num_iterations));
-    const avg_ns_std = std_stats.elapsed_ns / iterations_u64;
-    const avg_ns_two = two_stats.elapsed_ns / iterations_u64;
-    const avg_ns_three = three_stats.elapsed_ns / iterations_u64;
-
     // Output results
     std.debug.print("Benchmark Results:\n", .{});
     std.debug.print("  Tree Size: {d}\n", .{num_elements});
     std.debug.print("  Iterations: {d}\n\n", .{num_iterations});
 
-    std.debug.print("  Standard Search:  {d: >4} ns/op (Hash: 0x{x})\n", .{avg_ns_std, std_stats.hash});
-    std.debug.print("  Two-Way Search:   {d: >4} ns/op (Hash: 0x{x})\n", .{avg_ns_two, two_stats.hash});
-    std.debug.print("  Three-Way Search: {d: >4} ns/op (Hash: 0x{x})\n\n", .{avg_ns_three, three_stats.hash});
-
-    std.debug.print("  Standard Search Stats: {d:.2} mean {d:.2} stddev ns/op\n", .{std_stats.mean, std_stats.standard_deviation()});
-    std.debug.print("  Two-Way Search Stats:  {d:.2} mean {d:.2} stddev ns/op\n", .{two_stats.mean, two_stats.standard_deviation()});
-    std.debug.print("  Three-Way Search Stats: {d:.2} mean {d:.2} stddev ns/op\n", .{three_stats.mean, three_stats.standard_deviation()});
+    std.debug.print("  Standard Search:  {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{std_stats.mean, std_stats.standard_deviation(), std_stats.hash});
+    std.debug.print("  Two-Way Search:   {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{two_stats.mean, two_stats.standard_deviation(), two_stats.hash});
+    std.debug.print("  Three-Way Search: {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{three_stats.mean, three_stats.standard_deviation(), three_stats.hash});
 }
