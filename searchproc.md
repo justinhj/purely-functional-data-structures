@@ -147,7 +147,7 @@ Sun 3/180 using the Sun Modula-2 2.2 compiler with maximum optimization. The sam
 
 To measure the cost of successful search the following experiment was made:
 
-1. A tree containing 5000 elements (of type REAL when running MODULA-2, DOU-BLE in Turbo-Pascal, and DIGITS(18) in Ada) is constructed and the elements in the tree are copied into an array.
+1. A tree containing 5000 elements (of type REAL when running MODULA-2, DOUBLE in Turbo-Pascal, and DIGITS(18) in Ada) is constructed and the elements in the tree are copied into an array.
 2. The timer is started.
 3. 100 000 calls of the search procedure are made; all elements in the array are searched for the same number of times.
 4. The timer is stopped.

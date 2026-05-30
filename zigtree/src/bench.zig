@@ -35,8 +35,21 @@ pub const BenchmarkStats = struct {
     }
 
     /// Returns the population standard deviation
-    pub fn std_dev(self: *This) f64 {
+    pub fn standard_deviation(self: *This) f64 {
         return std.math.sqrt(self.variance());
     }
 };
 
+test "BenchmarkStats basic operations" {
+    var stats = BenchmarkStats{};
+
+    stats.record(10);
+    stats.record(20);
+    stats.record(30);
+
+    try std.testing.expectEqual(@as(u64, 10), stats.min);
+    try std.testing.expectEqual(@as(u64, 30), stats.max);
+    
+    try std.testing.expectApproxEqAbs(@as(f64, 20.0), stats.mean, 1e-9);
+    try std.testing.expectApproxEqAbs(@as(f64, 8.16496580927726), stats.standard_deviation(), 1e-9);
+}
