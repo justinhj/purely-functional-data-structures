@@ -57,6 +57,9 @@ pub fn main(init: std.process.Init) !void {
 
     // --- Benchmark: Standard Search (member) ---
     // Warm-up
+
+    var std_search_stats = bench.BenchmarkStats{};
+
     var warm_up_hash_std: u32 = 0;
     for (search_keys[0..@min(100, search_keys.len)]) |key| {
         const found = IntTreeStd.member(key, tree_std);
@@ -65,8 +68,11 @@ pub fn main(init: std.process.Init) !void {
     const start_std = std.Io.Clock.awake.now(io);
     var hash_std: u32 = 0;
     for (search_keys) |key| {
+        var start = std.Io.Clock.awake.now(io);
         const found = IntTreeStd.member(key, tree_std);
         hash_std = hash_std *% 33 +% (if (found) @as(u32, @bitCast(key)) else 0);
+        const duration = @as(u64, @intCast(start.untilNow(io, .awake).nanoseconds));
+        std_search_stats.record(duration);
     }
     const elapsed_std = start_std.untilNow(io, .awake);
     const elapsed_ns_std = elapsed_std.toNanoseconds();
@@ -113,4 +119,8 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("  Standard Search: {d: >4} ns/op (Hash: 0x{x})\n", .{avg_ns_std, hash_std +% warm_up_hash_std});
     std.debug.print("  Two-Way Search:  {d: >4} ns/op (Hash: 0x{x})\n", .{avg_ns_two, hash_two +% warm_up_hash_two});
     std.debug.print("  Three-Way Search: {d: >4} ns/op (Hash: 0x{x})\n", .{avg_ns_three, hash_three +% warm_up_hash_three});
+
+    std.debug.print("  Standard Search Stats: {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", 
+        .{std_search_stats.mean, std_search_stats.standard_deviation(), 
+            hash_std +% warm_up_hash_std});
 }
