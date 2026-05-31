@@ -59,14 +59,8 @@ pub fn main(init: std.process.Init) !void {
     }
 
     // Generate search queries based on successful_search percentage
-    const search_keys = try allocator.alloc(f32, num_iterations);
-    for (search_keys) |*key| {
-        if (random.intRangeLessThan(usize, 0, 100) < successful_search) {
-            key.* = keys[random.intRangeLessThan(usize, 0, num_elements)];
-        } else {
-            key.* = random.float(f32);
-        }
-    }
+    const search_keys = try generateSearchKeys(allocator, random, num_iterations, num_elements, keys, successful_search);
+    defer allocator.free(search_keys);
 
     // Run the benchmarks
     var std_stats = bench.runBenchmark(f32, io, search_keys, struct {
@@ -101,4 +95,84 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("  Standard Search:  {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{std_stats.mean, std_stats.standard_deviation(), std_stats.hash});
     std.debug.print("  Sentinel Search:  {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{sentinel_stats.mean, sentinel_stats.standard_deviation(), sentinel_stats.hash});
     std.debug.print("  Two-Way Search:   {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{two_stats.mean, two_stats.standard_deviation(), two_stats.hash});
+}
+
+pub fn generateSearchKeys(
+    allocator: std.mem.Allocator,
+    random: std.Random,
+    num_iterations: usize,
+    num_elements: usize,
+    keys: []const f32,
+    successful_search: usize,
+) ![]f32 {
+    const search_keys = try allocator.alloc(f32, num_iterations);
+    errdefer allocator.free(search_keys);
+    for (search_keys) |*key| {
+        if (random.intRangeLessThan(usize, 0, 100) < successful_search) {
+            key.* = keys[random.intRangeLessThan(usize, 0, num_elements)];
+        } else {
+            key.* = random.float(f32);
+        }
+    }
+    return search_keys;
+}
+
+test "generateSearchKeys ratio verification" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    var prng = std.Random.DefaultPrng.init(0);
+    const random = prng.random();
+
+    // Create a small keys array
+    const keys = try allocator.alloc(f32, 10);
+    for (keys) |*k| {
+        k.* = random.float(f32);
+    }
+
+    // Test 100% hits
+    {
+        const search_keys = try generateSearchKeys(allocator, random, 1000, keys.len, keys, 100);
+        defer allocator.free(search_keys);
+        
+        var hit_count: usize = 0;
+        for (search_keys) |k| {
+            if (std.mem.indexOfScalar(f32, keys, k) != null) {
+                hit_count += 1;
+            }
+        }
+        try std.testing.expectEqual(@as(usize, 1000), hit_count);
+    }
+
+    // Test 0% hits (100% misses)
+    {
+        const search_keys = try generateSearchKeys(allocator, random, 1000, keys.len, keys, 0);
+        defer allocator.free(search_keys);
+        
+        var hit_count: usize = 0;
+        for (search_keys) |k| {
+            if (std.mem.indexOfScalar(f32, keys, k) != null) {
+                hit_count += 1;
+            }
+        }
+        // Misses should generate random floats, which have virtually 0 probability of colliding with keys
+        try std.testing.expectEqual(@as(usize, 0), hit_count);
+    }
+
+    // Test 50% hits
+    {
+        const search_keys = try generateSearchKeys(allocator, random, 1000, keys.len, keys, 50);
+        defer allocator.free(search_keys);
+        
+        var hit_count: usize = 0;
+        for (search_keys) |k| {
+            if (std.mem.indexOfScalar(f32, keys, k) != null) {
+                hit_count += 1;
+            }
+        }
+        // With 1000 iterations, 50% hit probability should yield around 500 hits.
+        // We can allow a small tolerance (e.g. between 450 and 550) for statistical variance.
+        try std.testing.expect(hit_count >= 450 and hit_count <= 550);
+    }
 }
