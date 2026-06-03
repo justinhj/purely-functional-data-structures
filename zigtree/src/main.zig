@@ -3,15 +3,14 @@ const bts_std = @import("binary_tree_std.zig");
 const bts_sentinel = @import("binary_tree_sentinel.zig");
 const bench = @import("bench.zig");
 
-fn parseEnvVar(
+fn parseNumericEnvVar(
     environ_map: anytype,
-    upper_name: []const u8,
-    lower_name: []const u8,
+    name: []const u8,
     default_value: usize,
 ) usize {
-    if (environ_map.get(upper_name) orelse environ_map.get(lower_name)) |val| {
+    if (environ_map.get(name)) |val| {
         return std.fmt.parseInt(usize, val, 10) catch |err| {
-            std.debug.print("Error: Failed to parse {s} environment variable '{s}': {}\n", .{upper_name, val, err});
+            std.debug.print("Error: Failed to parse {s} environment variable '{s}': {}\n", .{name, val, err});
             std.process.exit(1);
         };
     }
@@ -22,9 +21,9 @@ pub fn main(init: std.process.Init) !void {
     const io = init.io;
     const allocator = init.arena.allocator();
 
-    const num_iterations = parseEnvVar(init.environ_map, "NUM_ITERATIONS", "num_iterations", 10_000);
-    const num_elements = parseEnvVar(init.environ_map, "NUM_ELEMENTS", "num_elements", 100_000);
-    const successful_search = parseEnvVar(init.environ_map, "SUCCESSFUL_SEARCH", "successful_search", 50);
+    const num_iterations = parseNumericEnvVar(init.environ_map, "NUM_ITERATIONS", 10_000);
+    const num_elements = parseNumericEnvVar(init.environ_map, "NUM_ELEMENTS", 100_000);
+    const successful_search = parseNumericEnvVar(init.environ_map, "SUCCESSFUL_SEARCH", 50);
 
     if (num_iterations == 0 or num_elements == 0) {
         std.debug.print("Zero iterations or zero elements requested. Skipping benchmark\n", .{});
