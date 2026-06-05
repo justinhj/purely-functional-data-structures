@@ -1,4 +1,53 @@
 * Notes on the binary search blog post
+** Why floating point?
+Based on the text of the paper, the author **does not explicitly state** why floating-point data types (REAL, DOUBLE, DIGITS) were used for the keys. However, looking closely at the author's claims earlier in the paper, it becomes very clear why this choice was made.
+
+Here is the breakdown of why floating-point numbers were used for the experimental benchmark:
+
+### The Core Reason: Making Comparisons Expensive
+
+In the Introduction, the author makes this crucial statement:
+
+> *"In the likely case that element-comparisons are more expensive than pointer operations, our improvement is more significant than the improvement caused by using a sentinel."*
+
+The entire premise of the improved algorithm is to reduce the number of key comparisons from two down to one per visited node, at the cost of a few extra pointer assignments.
+
+To prove that this trade-off is worthwhile in an experiment, the author needed to ensure that comparing two elements was genuinely "expensive" for the CPU.
+
+### The Context of 1991 Hardware
+
+In 1991, the hardware used for the tests (Sun 3/180, VAX/780, IBM PS/2 55X) handled different data types with vastly different performance profiles:
+
+* **Integers and Pointers:** Comparing simple integers or moving pointers around memory was very fast, typically taking just a few CPU cycles.
+* **Floating-Point Numbers:** Comparing `REAL` or `DOUBLE` types was significantly more computationally heavy. Even with a math co-processor (which the author explicitly notes was present on the IBM PS/2), floating-point operations took considerably more cycles than integer operations.
+
+### The Experimental Strategy
+
+If the author had used basic integers for the keys, the time spent comparing elements might have been nearly identical to the time spent on the extra pointer assignments (`candidate := T`). This would have resulted in a minimal or non-existent measurable speedup, masking the algorithmic efficiency of the two-way search.
+
+By deliberately choosing floating-point numbers (`REAL` in Modula-2, `DOUBLE` in Turbo-Pascal, and `DIGITS(18)` in Ada), the author artificially inflated the cost of the comparison operation relative to the pointer operations. This created a scenario where removing one comparison per node yielded the dramatic 26–44% speedup highlighted in the results.
+
+
+** Insights
+
+*** Overall we notice that 
+
+
+*** Branch prediction and memory writes
+theory is that sentinel is much slower because it needs to write to memory at the start of each search
+
+when traversing the tree the node will be not null until you reach a leaf so the branch prediction will be accurate 
+meaning the execution after the can be executed speculatively 
+
+"This replaces a highly predictable branch with a memory store (write)."
+
+In 1991, CPU pipelines were short (or non-existent), and memory writes were relatively cheap compared to the instruction overhead of checking for NIL.
+
+Today, the trade-off has inverted: predicting a branch is virtually free, but writing to memory is highly restrictive.
+
+
+
+** Paper 
 The central topic is Arne Andersson's paper "A Note on Searching in a Binary Tree".
 
 A method to search a tree with 2-way comparisons is presented and is only 1 more comparison than 3-way.
@@ -41,6 +90,38 @@ At the bottom of the tree we do two comparisons:
      we found it
 
 Note: deletion is cheaper because instead of finding the element first and then a leaf, we find both 
+** Hardware notes 
+Based on the paper's text and the historical context of the listed hardware and software, the DOUBLE data type is 64 bits (8 bytes).
 
-The test
+Here is the breakdown of how that is determined from the text:
+
+The Software and Hardware Context: In the "Experimental Results" section, the author states that the DOUBLE data type was used specifically when running the experiment on an "IBM PS/2 55X (with math co-processor) with Turbo Pascal 5.5."
+
+Turbo Pascal 5.5 Specifications (circa 1989-1991): Borland's Turbo Pascal 5.5 included standard support for IEEE 754 floating-point formats, provided a math co-processor (like the Intel 80387) was present.
+
+The Data Types: While the standard software-emulated Real type in older Pascal versions was 48 bits (6 bytes), the explicit DOUBLE type introduced for x87 math co-processors conforms to the IEEE 754 double-precision standard, which is exactly 64 bits.
+
+The Sun Workstation (Sun 3/180): Good catch on the Motorola architecture, though a slight correction—the Sun 3/180 actually used the Motorola 68020 processor paired with a 68881 math coprocessor. 
+
+Sun didn't switch to the 68030 until the later Sun-3x models (like the 3/80). On this hardware, the author used the REAL data type in Sun Modula-2. 
+
+Following standard Wirth language conventions, REAL maps to an IEEE 754 single-precision float, making it exactly 32 bits (half the size of the IBM's 64-bit DOUBLE).  
+
+The "Mainframe" (VAX/780): Technically classified as a "superminicomputer," the Digital VAX-11/780 ran Digital Ada using a DIGITS(18) declaration. 
+
+In Ada, this is a strict compiler constraint demanding a type capable of at least 18 decimal digits of precision. A 64-bit float (like VAX's native D_floating or G_floating formats) maxes out at about 15 to 17 decimal digits. To satisfy digits 18, the compiler was forced to use VAX's H_floating quad-precision format, which is an enormous 128 bits.
+
+| Computer     | Compiler                            | Notes                                               |
+|--------------+-------------------------------------+-----------------------------------------------------|
+| Sun 3/180    | Sun Modula-2 2.2 (max optimization) | Motorola 68020-based workstation (≈ 16–20 MHz)      |
+| VAX/780      | Digital Ada compiler                | DEC VAX-11/780, VAX architecture                    |
+| IBM PS/2 55X | Turbo Pascal 5.5                    | Intel 80386-based PC (with 80387 math co-processor) |
+
+| Compiler / Language | Data Type  | Precision (bits) | Notes                                  |
+|---------------------+------------+------------------+----------------------------------------|
+| Sun Modula-2        | REAL       | 32 bits (single) | Standard Modula-2 REAL on Sun          |
+| Turbo Pascal 5.5    | DOUBLE     | 64 bits (double) | IEEE 754 double                        |
+| Digital Ada         | DIGITS(18) | 128 bits (long)  | Ada DIGITS(18) 128-bit. VAX H_floating |
+
+
 

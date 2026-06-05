@@ -24,6 +24,7 @@ pub fn main(init: std.process.Init) !void {
     const num_iterations = parseNumericEnvVar(init.environ_map, "NUM_ITERATIONS", 10_000);
     const num_elements = parseNumericEnvVar(init.environ_map, "NUM_ELEMENTS", 100_000);
     const successful_search = parseNumericEnvVar(init.environ_map, "SUCCESSFUL_SEARCH", 50);
+    const balanced = parseNumericEnvVar(init.environ_map, "BALANCED", 0);
 
     if (num_iterations == 0 or num_elements == 0) {
         std.debug.print("Zero iterations or zero elements requested. Skipping benchmark\n", .{});
@@ -32,6 +33,11 @@ pub fn main(init: std.process.Init) !void {
 
     if (successful_search > 100) {
         std.debug.print("Error: SUCCESSFUL_SEARCH must be between 0 and 100 percent\n", .{});
+        std.process.exit(1);
+    }
+
+    if (balanced > 1) {
+        std.debug.print("Error: BALANCED must be 0 or 1\n", .{});
         std.process.exit(1);
     }
 
@@ -47,14 +53,21 @@ pub fn main(init: std.process.Init) !void {
     // Build the tree to benchmark search on
     const IntTreeStd = bts_std.BinaryTreeStd(f32);
     var tree_std: IntTreeStd.Tree = null;
-    for (keys) |key| {
-        tree_std = try IntTreeStd.insert(allocator, key, tree_std);
-    }
 
     const IntTreeSentinel = bts_sentinel.BinaryTreeSentinel(f32);
     var tree_sentinel = try IntTreeSentinel.init(allocator);
-    for (keys) |key| {
-        try tree_sentinel.insert(allocator, key);
+
+    if (balanced == 1) {
+        std.mem.sort(f32, keys, {}, std.sort.asc(f32));
+        tree_std = try insertBalancedStd(allocator, keys, tree_std);
+        try insertBalancedSentinel(allocator, keys, &tree_sentinel);
+    } else {
+        for (keys) |key| {
+            tree_std = try IntTreeStd.insert(allocator, key, tree_std);
+        }
+        for (keys) |key| {
+            try tree_sentinel.insert(allocator, key);
+        }
     }
 
     // Generate search queries based on successful_search percentage
@@ -91,9 +104,34 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("  Tree Size: {d}\n", .{num_elements});
     std.debug.print("  Iterations: {d}\n\n", .{num_iterations});
 
-    std.debug.print("  Standard Search:  {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{std_stats.mean, std_stats.standard_deviation(), std_stats.hash});
-    std.debug.print("  Sentinel Search:  {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{sentinel_stats.mean, sentinel_stats.standard_deviation(), sentinel_stats.hash});
-    std.debug.print("  Two-Way Search:   {d:.2} mean {d:.2} stddev ns/op (Hash: 0x{x})\n", .{two_stats.mean, two_stats.standard_deviation(), two_stats.hash});
+    std.debug.print("  Standard Search:  {d:.2} mean {d:.2} stddev ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{std_stats.mean, std_stats.standard_deviation(), @as(f64, @floatFromInt(std_stats.elapsed_ns)) / 1000.0, std_stats.hash});
+    std.debug.print("  Sentinel Search:  {d:.2} mean {d:.2} stddev ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{sentinel_stats.mean, sentinel_stats.standard_deviation(), @as(f64, @floatFromInt(sentinel_stats.elapsed_ns)) / 1000.0, sentinel_stats.hash});
+    std.debug.print("  Two-Way Search:   {d:.2} mean {d:.2} stddev ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{two_stats.mean, two_stats.standard_deviation(), @as(f64, @floatFromInt(two_stats.elapsed_ns)) / 1000.0, two_stats.hash});
+}
+
+fn insertBalancedStd(
+    allocator: std.mem.Allocator,
+    keys: []const f32,
+    tree: bts_std.BinaryTreeStd(f32).Tree,
+) !bts_std.BinaryTreeStd(f32).Tree {
+    if (keys.len == 0) return tree;
+    const mid = keys.len / 2;
+    var new_tree = try bts_std.BinaryTreeStd(f32).insert(allocator, keys[mid], tree);
+    new_tree = try insertBalancedStd(allocator, keys[0..mid], new_tree);
+    new_tree = try insertBalancedStd(allocator, keys[mid + 1..], new_tree);
+    return new_tree;
+}
+
+fn insertBalancedSentinel(
+    allocator: std.mem.Allocator,
+    keys: []const f32,
+    tree: *bts_sentinel.BinaryTreeSentinel(f32),
+) !void {
+    if (keys.len == 0) return;
+    const mid = keys.len / 2;
+    try tree.insert(allocator, keys[mid]);
+    try insertBalancedSentinel(allocator, keys[0..mid], tree);
+    try insertBalancedSentinel(allocator, keys[mid + 1..], tree);
 }
 
 pub fn generateSearchKeys(
