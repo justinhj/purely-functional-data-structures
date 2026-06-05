@@ -23,17 +23,17 @@ $$\text{Mean Search Speed} \pm \text{Standard Deviation (Percentage of Mean)}$$
 
 | Search Method | Successful Search (100% Hits) | Unsuccessful Search (100% Misses) |
 | :--- | :--- | :--- |
-| **Standard** | $55.74 \pm 1.81 \text{ ns/op } (3.2\%)$ | $60.69 \pm 0.71 \text{ ns/op } (1.2\%)$ |
-| **Sentinel** | $72.70 \pm 5.21 \text{ ns/op } (7.2\%)$ | $80.38 \pm 0.22 \text{ ns/op } (0.3\%)$ |
-| **Two-Way** | $58.87 \pm 3.03 \text{ ns/op } (5.1\%)$ | $56.00 \pm 0.56 \text{ ns/op } (1.0\%)$ |
+| **Standard** | $55.74 \pm 1.81$ ns/op (3.2%) | $60.69 \pm 0.71$ ns/op (1.2%) |
+| **Sentinel** | $72.70 \pm 5.21$ ns/op (7.2%) | $80.38 \pm 0.22$ ns/op (0.3%) |
+| **Two-Way** | $58.87 \pm 3.03$ ns/op (5.1%) | $56.00 \pm 0.56$ ns/op (1.0%) |
 
 ### Perfectly Balanced Tree (`BALANCED=1`)
 
 | Search Method | Successful Search (100% Hits) | Unsuccessful Search (100% Misses) |
 | :--- | :--- | :--- |
-| **Standard** | $59.39 \pm 0.34 \text{ ns/op } (0.6\%)$ | $63.65 \pm 1.29 \text{ ns/op } (2.0\%)$ |
-| **Sentinel** | $38.14 \pm 1.77 \text{ ns/op } (4.6\%)$ | $35.76 \pm 1.00 \text{ ns/op } (2.8\%)$ |
-| **Two-Way** | $61.86 \pm 0.86 \text{ ns/op } (1.4\%)$ | $60.09 \pm 1.15 \text{ ns/op } (1.9\%)$ |
+| **Standard** | $59.39 \pm 0.34$ ns/op (0.6%) | $63.65 \pm 1.29$ ns/op (2.0%) |
+| **Sentinel** | $38.14 \pm 1.77$ ns/op (4.6%) | $35.76 \pm 1.00$ ns/op (2.8%) |
+| **Two-Way** | $61.86 \pm 0.86$ ns/op (1.4%) | $60.09 \pm 1.15$ ns/op (1.9%) |
 
 ---
 
