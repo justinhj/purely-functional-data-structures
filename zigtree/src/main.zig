@@ -1,7 +1,6 @@
 const std = @import("std");
 const bts_std = @import("binary_tree_std.zig");
 const bts_sentinel = @import("binary_tree_sentinel.zig");
-const bench = @import("bench.zig");
 
 fn parseNumericEnvVar(
     environ_map: anytype,
@@ -75,38 +74,53 @@ pub fn main(init: std.process.Init) !void {
     defer allocator.free(search_keys);
 
     // Run the benchmarks
-    var std_stats = bench.runBenchmark(f32, io, search_keys, struct {
-        tree: IntTreeStd.Tree,
-        pub fn run(self: @This(), key: f32) u32 {
-            const found = IntTreeStd.member(key, self.tree);
-            return if (found) @as(u32, @bitCast(key)) else 0;
-        }
-    }{ .tree = tree_std });
+    var std_hash: u32 = 0;
+    const std_start = std.Io.Clock.awake.now(io);
+    for (search_keys) |key| {
+        const found = IntTreeStd.member(key, tree_std);
+        const res = if (found) @as(u32, @bitCast(key)) else 0;
+        std_hash = std_hash *% 33 +% res;
+    }
+    const std_elapsed = std_start.untilNow(io, .awake).nanoseconds;
 
-    var sentinel_stats = bench.runBenchmark(f32, io, search_keys, struct {
-        tree: *IntTreeSentinel,
-        pub fn run(self: @This(), key: f32) u32 {
-            const found = self.tree.member(key);
-            return if (found) @as(u32, @bitCast(key)) else 0;
-        }
-    }{ .tree = &tree_sentinel });
+    var sentinel_hash: u32 = 0;
+    const sentinel_start = std.Io.Clock.awake.now(io);
+    for (search_keys) |key| {
+        const found = tree_sentinel.member(key);
+        const res = if (found) @as(u32, @bitCast(key)) else 0;
+        sentinel_hash = sentinel_hash *% 33 +% res;
+    }
+    const sentinel_elapsed = sentinel_start.untilNow(io, .awake).nanoseconds;
 
-    var two_stats = bench.runBenchmark(f32, io, search_keys, struct {
-        tree: IntTreeStd.Tree,
-        pub fn run(self: @This(), key: f32) u32 {
-            const found = IntTreeStd.member2(key, self.tree, null);
-            return if (found) @as(u32, @bitCast(key)) else 0;
-        }
-    }{ .tree = tree_std });
+    var two_hash: u32 = 0;
+    const two_start = std.Io.Clock.awake.now(io);
+    for (search_keys) |key| {
+        const found = IntTreeStd.member2(key, tree_std, null);
+        const res = if (found) @as(u32, @bitCast(key)) else 0;
+        two_hash = two_hash *% 33 +% res;
+    }
+    const two_elapsed = two_start.untilNow(io, .awake).nanoseconds;
 
     // Output results
     std.debug.print("Benchmark Results:\n", .{});
     std.debug.print("  Tree Size: {d}\n", .{num_elements});
     std.debug.print("  Iterations: {d}\n\n", .{num_iterations});
 
-    std.debug.print("  Standard Search:  {d:.2} mean {d:.2} stddev ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{std_stats.mean, std_stats.standard_deviation(), @as(f64, @floatFromInt(std_stats.elapsed_ns)) / 1000.0, std_stats.hash});
-    std.debug.print("  Sentinel Search:  {d:.2} mean {d:.2} stddev ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{sentinel_stats.mean, sentinel_stats.standard_deviation(), @as(f64, @floatFromInt(sentinel_stats.elapsed_ns)) / 1000.0, sentinel_stats.hash});
-    std.debug.print("  Two-Way Search:   {d:.2} mean {d:.2} stddev ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{two_stats.mean, two_stats.standard_deviation(), @as(f64, @floatFromInt(two_stats.elapsed_ns)) / 1000.0, two_stats.hash});
+    std.debug.print("  Standard Search:  {d:.2} ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{
+        @as(f64, @floatFromInt(std_elapsed)) / @as(f64, @floatFromInt(num_iterations)),
+        @as(f64, @floatFromInt(std_elapsed)) / 1000.0,
+        std_hash,
+    });
+    std.debug.print("  Sentinel Search:  {d:.2} ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{
+        @as(f64, @floatFromInt(sentinel_elapsed)) / @as(f64, @floatFromInt(num_iterations)),
+        @as(f64, @floatFromInt(sentinel_elapsed)) / 1000.0,
+        sentinel_hash,
+    });
+    std.debug.print("  Two-Way Search:   {d:.2} ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{
+        @as(f64, @floatFromInt(two_elapsed)) / @as(f64, @floatFromInt(num_iterations)),
+        @as(f64, @floatFromInt(two_elapsed)) / 1000.0,
+        two_hash,
+    });
 }
 
 fn insertBalancedStd(

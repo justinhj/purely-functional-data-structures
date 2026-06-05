@@ -43,10 +43,10 @@ for combo in combinations:
         )
         
         output_text = res.stdout + res.stderr
-        # Match microsecond timing using regex
-        std_match = re.search(r"Standard Search:.*?Total:\s*([\d.]+)\s*us", output_text)
-        sentinel_match = re.search(r"Sentinel Search:.*?Total:\s*([\d.]+)\s*us", output_text)
-        twoway_match = re.search(r"Two-Way Search:.*?Total:\s*([\d.]+)\s*us", output_text)
+        # Match ns/op average timing using regex
+        std_match = re.search(r"Standard Search:\s*([\d.]+)\s*ns/op", output_text)
+        sentinel_match = re.search(r"Sentinel Search:\s*([\d.]+)\s*ns/op", output_text)
+        twoway_match = re.search(r"Two-Way Search:\s*([\d.]+)\s*ns/op", output_text)
         
         if std_match and sentinel_match and twoway_match:
             results[label]["Standard"].append(float(std_match.group(1)))
@@ -64,6 +64,6 @@ for label, data in results.items():
             mean = statistics.mean(times)
             stddev = statistics.stdev(times) if len(times) > 1 else 0.0
             pct_stddev = (stddev / mean) * 100.0 if mean > 0 else 0.0
-            print(f"  {method:8} Search: Mean = {mean:8.2f} us, StdDev = {stddev:6.2f} us ({pct_stddev:.1f}%)")
+            print(f"  {method:8} Search: Mean = {mean:8.2f} ns/op, StdDev = {stddev:6.2f} ns/op ({pct_stddev:.1f}%)")
         else:
             print(f"  {method:8} Search: No data")
