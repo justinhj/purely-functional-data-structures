@@ -26,12 +26,16 @@ pub fn BinaryTreeStd(comptime T: type) type {
             }
         }
 
-        /// Basic version of member (2 comparisons per node plus the null check)
         pub fn member(x: T, t: Tree) bool {
-            if (t) |node| {
-                if (x < node.value) return member(x, node.left);
-                if (x > node.value) return member(x, node.right);
-                return true;
+            var node = t;
+            while (node) |curr| {
+                if (x < curr.value) {
+                    node = curr.left;
+                } else if (x > curr.value) {
+                    node = curr.right;
+                } else {
+                    return true;
+                }
             }
             return false;
         }
