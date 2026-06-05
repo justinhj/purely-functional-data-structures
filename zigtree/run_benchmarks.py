@@ -22,7 +22,8 @@ for combo in combinations:
     results[label] = {
         "Standard": [],
         "Sentinel": [],
-        "Two-Way": []
+        "Two-Way": [],
+        "Three-Way": []
     }
     
     print(f"Running: {label}...")
@@ -47,11 +48,13 @@ for combo in combinations:
         std_match = re.search(r"Standard Search:\s*([\d.]+)\s*ns/op", output_text)
         sentinel_match = re.search(r"Sentinel Search:\s*([\d.]+)\s*ns/op", output_text)
         twoway_match = re.search(r"Two-Way Search:\s*([\d.]+)\s*ns/op", output_text)
+        threeway_match = re.search(r"Three-Way Search:\s*([\d.]+)\s*ns/op", output_text)
         
-        if std_match and sentinel_match and twoway_match:
+        if std_match and sentinel_match and twoway_match and threeway_match:
             results[label]["Standard"].append(float(std_match.group(1)))
             results[label]["Sentinel"].append(float(sentinel_match.group(1)))
             results[label]["Two-Way"].append(float(twoway_match.group(1)))
+            results[label]["Three-Way"].append(float(threeway_match.group(1)))
         else:
             print(f"Failed to parse run {run+1} for {label}: {output_text}")
 
@@ -64,6 +67,6 @@ for label, data in results.items():
             mean = statistics.mean(times)
             stddev = statistics.stdev(times) if len(times) > 1 else 0.0
             pct_stddev = (stddev / mean) * 100.0 if mean > 0 else 0.0
-            print(f"  {method:8} Search: Mean = {mean:8.2f} ns/op, StdDev = {stddev:6.2f} ns/op ({pct_stddev:.1f}%)")
+            print(f"  {method:9} Search: Mean = {mean:8.2f} ns/op, StdDev = {stddev:6.2f} ns/op ({pct_stddev:.1f}%)")
         else:
-            print(f"  {method:8} Search: No data")
+            print(f"  {method:9} Search: No data")

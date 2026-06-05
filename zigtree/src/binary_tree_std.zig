@@ -36,13 +36,32 @@ pub fn BinaryTreeStd(comptime T: type) type {
             return false;
         }
 
-        /// Optimized version of member taking d+1 max comparisons
-        pub fn member2(x: T, t: Tree, candidate: ?T) bool {
+        /// Andersson's two-way search (iterative)
+        pub fn member2(x: T, t: Tree) bool {
+            var node = t;
+            var candidate: ?T = null;
+
+            while (node) |curr| {
+                if (x < curr.value) {
+                    node = curr.left;
+                } else {
+                    candidate = curr.value;
+                    node = curr.right;
+                }
+            }
+            if (candidate) |c| {
+                return c == x;
+            }
+            return false;
+        }
+
+        /// Andersson's two-way search (recursive)
+        pub fn member2_re(x: T, t: Tree, candidate: ?T) bool {
             if (t) |node| {
                 if (x >= node.value) {
-                    return member2(x, node.right, node.value);
+                    return member2_re(x, node.right, node.value);
                 } else {
-                    return member2(x, node.left, candidate);
+                    return member2_re(x, node.left, candidate);
                 }
             } else {
                 if (candidate) |c| {

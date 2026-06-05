@@ -95,11 +95,20 @@ pub fn main(init: std.process.Init) !void {
     var two_hash: u32 = 0;
     const two_start = std.Io.Clock.awake.now(io);
     for (search_keys) |key| {
-        const found = IntTreeStd.member2(key, tree_std, null);
+        const found = IntTreeStd.member2(key, tree_std);
         const res = if (found) @as(u32, @bitCast(key)) else 0;
         two_hash = two_hash *% 33 +% res;
     }
     const two_elapsed = two_start.untilNow(io, .awake).nanoseconds;
+
+    var three_hash: u32 = 0;
+    const three_start = std.Io.Clock.awake.now(io);
+    for (search_keys) |key| {
+        const found = IntTreeStd.member3(key, tree_std);
+        const res = if (found) @as(u32, @bitCast(key)) else 0;
+        three_hash = three_hash *% 33 +% res;
+    }
+    const three_elapsed = three_start.untilNow(io, .awake).nanoseconds;
 
     // Output results
     std.debug.print("Benchmark Results:\n", .{});
@@ -120,6 +129,11 @@ pub fn main(init: std.process.Init) !void {
         @as(f64, @floatFromInt(two_elapsed)) / @as(f64, @floatFromInt(num_iterations)),
         @as(f64, @floatFromInt(two_elapsed)) / 1000.0,
         two_hash,
+    });
+    std.debug.print("  Three-Way Search: {d:.2} ns/op | Total: {d:.2} us (Hash: 0x{x})\n", .{
+        @as(f64, @floatFromInt(three_elapsed)) / @as(f64, @floatFromInt(num_iterations)),
+        @as(f64, @floatFromInt(three_elapsed)) / 1000.0,
+        three_hash,
     });
 }
 
