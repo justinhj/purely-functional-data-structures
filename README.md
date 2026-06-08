@@ -1,6 +1,6 @@
 # Purely Functional Data Structures in Scala 3
 
-This project contains implementations of data structures and exercises from Chris Okasaki's book, *Purely Functional Data Structures*, using Scala 3 and `scala-cli`.
+This project contains implementations of data structures and exercises from Chris Okasaki's book, *Purely Functional Data Structures*, using Scala 3 and `scala-cli` and Standard ML.
 
 ## Catalog
 
