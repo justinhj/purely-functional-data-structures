@@ -1,6 +1,15 @@
 const std = @import("std");
 
-/// Implementation of a binary tree and search with sentinel leaves
+/// A Binary Search Tree (BST) that optimizes search and insertion loops by using a shared sentinel leaf.
+///
+/// This implementation uses a sentinel search technique where the search key is copied into the 
+/// sentinel node itself before traversal (`sentinel.value = x`). This guarantees that the search loop 
+/// will always terminate, eliminating the need to check for null pointers or sentinel equality 
+/// inside the inner loop (reducing the loop condition from two checks to one comparison).
+///
+/// Reference:
+///   Niklaus Wirth, "Algorithms + Data Structures = Programs" (1976),
+///   Chapter 4: Dynamic Information Structures, Section 4.4: Binary Trees.
 pub fn BinaryTreeSentinel(comptime T: type) type {
     return struct {
         const This = @This();

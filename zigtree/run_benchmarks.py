@@ -1,7 +1,29 @@
+# /// script
+# dependencies = [
+#     "py-cpuinfo",
+# ]
+# ///
+
 import os
 import re
 import subprocess
 import statistics
+import cpuinfo
+
+# Get the full info dictionary
+info = cpuinfo.get_cpu_info()
+
+print("--- Detailed CPU Identifying Information ---")
+print(f"Brand/Model:     {info.get('brand_raw')}")
+print(f"Architecture:    {info.get('arch')}")
+bits = info.get('bits')
+print(f"Bits:            {bits}-bit" if bits else "Bits:            N/A")
+print(f"Advertised Hz:   {info.get('hz_advertised_friendly')}")
+print(f"Actual Hz:       {info.get('hz_actual_friendly')}")
+print(f"Vendor ID:       {info.get('vendor_id_raw')}")
+print(f"Physical Cores:  {info.get('count')}")
+print(f"CPU Flags/Features: {', '.join((info.get('flags') or [])[:10])}... (and more)")
+print()
 
 # Configuration
 num_runs = 10
